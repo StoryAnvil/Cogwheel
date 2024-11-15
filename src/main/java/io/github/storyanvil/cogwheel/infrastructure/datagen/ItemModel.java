@@ -1,5 +1,6 @@
 package io.github.storyanvil.cogwheel.infrastructure.datagen;
 
+import io.github.storyanvil.cogwheel.infrastructure.registryObjects.ITEMS;
 import net.minecraft.data.PackOutput;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
@@ -16,6 +17,8 @@ public class ItemModel extends ItemModelProvider {
     @Override
     protected void registerModels() {
         // simpleItem(<item>)
+
+        simpleItem(ITEMS.pointer);
     }
 
     private ItemModelBuilder simpleItem(RegistryObject<Item> item) {
