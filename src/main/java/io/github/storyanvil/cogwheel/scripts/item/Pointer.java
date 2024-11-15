@@ -13,6 +13,8 @@ import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 
+import java.util.Objects;
+
 public class Pointer extends Item {
     public Pointer(Properties pProperties) {
         super(pProperties);
@@ -26,10 +28,10 @@ public class Pointer extends Item {
             BlockState blockState = pContext.getLevel().getBlockState(pos);
             Level level = pContext.getLevel();
 
-            level.destroyBlockProgress(-1848, pos, 8);
+            level.destroyBlockProgress(Objects.requireNonNull(player).getId(), pos, 8);
 
             Cogwheel.queueServerWork(10, () -> {
-                level.destroyBlockProgress(-1848, pos, -1);
+                level.destroyBlockProgress(player.getId(), pos, -1);
             });
         }
 
