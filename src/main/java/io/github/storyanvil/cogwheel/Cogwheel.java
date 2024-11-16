@@ -1,7 +1,10 @@
 package io.github.storyanvil.cogwheel;
 
 import com.mojang.logging.LogUtils;
+import io.github.storyanvil.cogwheel.infrastructure.registryObjects.ENTITY;
 import io.github.storyanvil.cogwheel.infrastructure.registryObjects.ITEMS;
+import io.github.storyanvil.cogwheel.infrastructure.registryObjects.entity.client.NPCRenderer;
+import net.minecraft.client.renderer.entity.EntityRenderers;
 import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.MinecraftForge;
@@ -36,6 +39,8 @@ public class Cogwheel
         modEventBus.addListener(this::commonSetup);
 
         ITEMS.register(modEventBus);
+        ENTITY.register(modEventBus);
+
         MinecraftForge.EVENT_BUS.register(this);
 
         // Register the item to a creative tab
@@ -52,6 +57,7 @@ public class Cogwheel
     {
         if (event.getTabKey() == CreativeModeTabs.OP_BLOCKS) {
             event.accept(ITEMS.pointer);
+            event.accept(ITEMS.NPC_FOLLOW);
         }
     }
 
@@ -69,7 +75,7 @@ public class Cogwheel
         @SubscribeEvent
         public static void onClientSetup(FMLClientSetupEvent event)
         {
-
+            EntityRenderers.register(ENTITY.NPC.get(), NPCRenderer::new);
         }
     }
 

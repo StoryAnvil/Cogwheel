@@ -19,6 +19,7 @@ public class ItemModel extends ItemModelProvider {
         // simpleItem(<item>)
 
         simpleItem(ITEMS.pointer);
+        simpleItem(ITEMS.NPC_FOLLOW);
     }
 
     private ItemModelBuilder simpleItem(RegistryObject<Item> item) {

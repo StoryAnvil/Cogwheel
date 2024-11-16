@@ -2,10 +2,6 @@ package io.github.storyanvil.cogwheel.scripts.item;
 
 import io.github.storyanvil.cogwheel.Cogwheel;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.particles.BlockParticleOption;
-import net.minecraft.core.particles.ItemParticleOption;
-import net.minecraft.core.particles.ParticleType;
-import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
@@ -28,13 +24,15 @@ public class Pointer extends Item {
             BlockState blockState = pContext.getLevel().getBlockState(pos);
             Level level = pContext.getLevel();
 
-            level.destroyBlockProgress(Objects.requireNonNull(player).getId(), pos, 8);
+            level.destroyBlockProgress(-1545, pos, 8);
 
             Cogwheel.queueServerWork(10, () -> {
-                level.destroyBlockProgress(player.getId(), pos, -1);
+                level.destroyBlockProgress(-1545, pos, -1);
             });
         }
 
         return InteractionResult.SUCCESS;
     }
+
+
 }

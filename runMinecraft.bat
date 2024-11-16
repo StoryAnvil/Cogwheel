@@ -1,0 +1,1 @@
+"C:\Users\Семья\Desktop\InfLoop.url"
