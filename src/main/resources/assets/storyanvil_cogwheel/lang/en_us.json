@@ -1,3 +1,4 @@
 {
-  "item.storyanvil_cogwheel.pointer": "Pointer"
+  "item.storyanvil_cogwheel.pointer":         "[TOOL] Pointer",
+  "item.storyanvil_cogwheel.npc_follow_wand": "[NPC] Follow @everyone"
 }

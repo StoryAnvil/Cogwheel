@@ -68,9 +68,8 @@ public class NPC extends Animal {
 
     @Override
     protected void registerGoals() {
-        this.goalSelector.addGoal(0, new FloatGoal(this));
         this.goalSelector.addGoal(1, new TemptGoal(this, 2D, Ingredient.of(ITEMS.NPC_FOLLOW.get()), false));
-        this.goalSelector.addGoal(2, new LookAtPlayerGoal(this, Player.class, 5f));
+        this.goalSelector.addGoal(0, new LookAtPlayerGoal(this, Player.class, 5f));
     }
 
     @Nullable
