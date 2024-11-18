@@ -20,6 +20,7 @@ public class ItemModel extends ItemModelProvider {
 
         simpleItem(ITEMS.pointer);
         simpleItem(ITEMS.NPC_FOLLOW);
+        simpleItem(ITEMS.money);
     }
 
     private ItemModelBuilder simpleItem(RegistryObject<Item> item) {

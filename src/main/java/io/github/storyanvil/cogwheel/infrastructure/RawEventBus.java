@@ -25,6 +25,7 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.registries.ForgeRegistries;
 
 import java.util.HashMap;
+import java.util.UUID;
 
 @Mod.EventBusSubscriber
 public class RawEventBus {
@@ -54,6 +55,8 @@ public class RawEventBus {
                                                             Entity entity = EntityArgument.getEntity(arguments, "uuid");
                                                             if (entity instanceof NPC npc) {
                                                                 npc.setSkin(StringArgumentType.getString(arguments, "_skin"));
+                                                            } else {
+                                                                return 1;
                                                             }
                                                             return 0;
                                                         })
@@ -63,6 +66,33 @@ public class RawEventBus {
                         )
                 )
                 .then(Commands.literal("msg")
+                        .then(Commands.literal("run_localized")
+                                .then(Commands.argument("prefix", StringArgumentType.string())
+                                        .then(Commands.argument("localization_key", StringArgumentType.string())
+                                                .executes(arguments -> {
+                                                    String prefix = StringArgumentType.getString(arguments, "prefix");
+                                                    String localization_key = StringArgumentType.getString(arguments, "localization_key");
+
+                                                    ServerLevel _level = arguments.getSource().getLevel();
+                                                    _level.getServer().getCommands().performPrefixedCommand(new CommandSourceStack(CommandSource.NULL, new Vec3(0, 0, 0), Vec2.ZERO, (ServerLevel) _level, 4, "", Component.literal(""), _level.getServer(), null).withSuppressedOutput(),
+                                                            prefix + Component.translatable(localization_key));
+                                                    return 0;
+                                                })
+                                                .then(Commands.argument("suffix", StringArgumentType.string())
+                                                        .executes(arguments -> {
+                                                            String prefix = StringArgumentType.getString(arguments, "prefix");
+                                                            String localization_key = StringArgumentType.getString(arguments, "localization_key");
+                                                            String suffix = StringArgumentType.getString(arguments, "suffix");
+
+                                                            ServerLevel _level = arguments.getSource().getLevel();
+                                                            _level.getServer().getCommands().performPrefixedCommand(new CommandSourceStack(CommandSource.NULL, new Vec3(0, 0, 0), Vec2.ZERO, (ServerLevel) _level, 4, "", Component.literal(""), _level.getServer(), null).withSuppressedOutput(),
+                                                                    prefix + Component.translatable(localization_key) + suffix);
+                                                            return 0;
+                                                        })
+                                                )
+                                        )
+                                )
+                        )
                         .then(Commands.literal("dialog")
                                 .then(Commands.argument("delay", IntegerArgumentType.integer(1))
                                         .then(Commands.argument("sender", StringArgumentType.string())
@@ -101,6 +131,12 @@ public class RawEventBus {
                                                 )
                                         )
                                 )
+                                .then(Commands.literal("clear_pool")
+                                        .executes(context -> {
+                                            Cogwheel.chatMsgCallbacks = null;
+                                            return 0;
+                                        })
+                                )
                         )
                 )
                 .then(Commands.literal("multi")
@@ -132,7 +168,6 @@ public class RawEventBus {
                                 "/function " + Cogwheel.chatMsgCallbacks.get(key));
                     }
                 }
-                Cogwheel.chatMsgCallbacks = null;
             }
         } catch (Exception e) {
             Cogwheel.LOGGER.error(e.toString());

@@ -17,6 +17,8 @@ public class ITEMS {
 
     public static final RegistryObject<Item> NPC_FOLLOW = ITEMS.register("npc_follow_wand",
             () -> new Item(new Item.Properties()));
+    public static final RegistryObject<Item> money = ITEMS.register("money",
+            () -> new Item(new Item.Properties()));
 
     public static void register(IEventBus eventBus) {
         ITEMS.register(eventBus);
