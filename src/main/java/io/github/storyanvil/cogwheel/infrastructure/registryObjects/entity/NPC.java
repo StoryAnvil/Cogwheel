@@ -85,9 +85,9 @@ public class NPC extends Animal {
     }
 
     public String getSkin() {
-        return entityData.get(DATA_skin);
+        return getPersistentData().getString("skin");
     }
     public void setSkin(String skin) {
-        entityData.set(DATA_skin, skin);
+        getPersistentData().putString("skin", skin);
     }
 }

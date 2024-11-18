@@ -8,6 +8,7 @@ import net.minecraft.commands.CommandSource;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.EntityArgument;
+import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -20,6 +21,7 @@ import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.event.ServerChatEvent;
 import net.minecraftforge.event.entity.living.LivingAttackEvent;
+import net.minecraftforge.event.server.ServerAboutToStartEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.registries.ForgeRegistries;
@@ -27,7 +29,7 @@ import net.minecraftforge.registries.ForgeRegistries;
 import java.util.HashMap;
 import java.util.UUID;
 
-@Mod.EventBusSubscriber
+@Mod.EventBusSubscriber(modid = Cogwheel.modId)
 public class RawEventBus {
     @SubscribeEvent
     public static void onEntityAttacked(LivingAttackEvent event) {
@@ -42,9 +44,10 @@ public class RawEventBus {
             }
         }
     }
+
     @SubscribeEvent
-    public static void registerCommand(RegisterCommandsEvent event) {
-        event.getDispatcher().register(Commands.literal("cogwheel").requires(s -> s.hasPermission(3))
+    public static void registerCommands(RegisterCommandsEvent event) {
+        event.getDispatcher().register(Commands.literal("cogwheel").requires(s -> s.hasPermission(1))
                 .then(Commands.literal("npc")
                         .then(Commands.literal("set")
                                 .then(Commands.literal("skin")
@@ -116,6 +119,30 @@ public class RawEventBus {
                                                 )
                                         )
                                 )
+                                .then(Commands.literal("copy")
+                                        .then(Commands.argument("delay", IntegerArgumentType.integer(1))
+                                                .then(Commands.argument("sender", StringArgumentType.string())
+                                                        .then(Commands.argument("message", StringArgumentType.string())
+                                                                .executes(arguments -> {
+                                                                    Level level = arguments.getSource().getUnsidedLevel();
+                                                                    String sender = StringArgumentType.getString(arguments, "sender");
+                                                                    String message = StringArgumentType.getString(arguments, "message");
+                                                                    Cogwheel.queueServerWork(IntegerArgumentType.getInteger(arguments, "delay"), () -> {
+                                                                        level.players().forEach(player -> {
+                                                                            player.sendSystemMessage(
+                                                                                    Component.translatable(sender)
+                                                                                            .withStyle(style -> style.withColor(0x007594))
+                                                                                            .append(
+                                                                                                    Component.translatable(message).withStyle(style -> style.withColor(0xFFFFFF).withClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, Component.translatable(message).getString())))
+                                                                                            ));
+                                                                        });
+                                                                    });
+                                                                    return 0;
+                                                                })
+                                                        )
+                                                )
+                                        )
+                                )
                                 .then(Commands.literal("choice")
                                         .then(Commands.argument("user_message", StringArgumentType.string())
                                                 .then(Commands.argument("callback", StringArgumentType.string())
@@ -161,12 +188,18 @@ public class RawEventBus {
         try {
             if (Cogwheel.chatMsgCallbacks != null) {
                 String msg = event.getRawText();
+                boolean found = false;
+                Level _level = event.getPlayer().level();
                 for (String key : Cogwheel.chatMsgCallbacks.keySet()) {
                     if (msg.equals(Component.translatable(key).getString())) {
-                        Level _level = event.getPlayer().level();
+                        found = true;
                         _level.getServer().getCommands().performPrefixedCommand(new CommandSourceStack(CommandSource.NULL, new Vec3(0, 0, 0), Vec2.ZERO, (ServerLevel) _level, 4, "", Component.literal(""), _level.getServer(), null).withSuppressedOutput(),
                                 "/function " + Cogwheel.chatMsgCallbacks.get(key));
                     }
+                }
+                if (!found) {
+                    _level.getServer().getCommands().performPrefixedCommand(new CommandSourceStack(CommandSource.NULL, new Vec3(0, 0, 0), Vec2.ZERO, (ServerLevel) _level, 4, "", Component.literal(""), _level.getServer(), null).withSuppressedOutput(),
+                            "/function " + Cogwheel.chatMsgCallbacks.get("__default"));
                 }
             }
         } catch (Exception e) {
