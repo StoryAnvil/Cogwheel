@@ -75,7 +75,7 @@ public class RawEventBus {
 
                                                     ServerLevel _level = arguments.getSource().getLevel();
                                                     _level.getServer().getCommands().performPrefixedCommand(new CommandSourceStack(CommandSource.NULL, new Vec3(0, 0, 0), Vec2.ZERO, (ServerLevel) _level, 4, "", Component.literal(""), _level.getServer(), null).withSuppressedOutput(),
-                                                            prefix + Component.translatable(localization_key));
+                                                            prefix + Component.translatable(localization_key).getString());
                                                     return 0;
                                                 })
                                                 .then(Commands.argument("suffix", StringArgumentType.string())
