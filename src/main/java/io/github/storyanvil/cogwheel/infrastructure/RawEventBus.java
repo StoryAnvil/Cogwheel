@@ -3,11 +3,16 @@ package io.github.storyanvil.cogwheel.infrastructure;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import io.github.storyanvil.cogwheel.Cogwheel;
+import io.github.storyanvil.cogwheel.infrastructure.StoryWorks.NPCAction;
+import io.github.storyanvil.cogwheel.infrastructure.StoryWorks.NPCActionConversionFailedException;
+import io.github.storyanvil.cogwheel.infrastructure.StoryWorks.Utils;
 import io.github.storyanvil.cogwheel.infrastructure.registryObjects.entity.NPC;
 import net.minecraft.commands.CommandSource;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.EntityArgument;
+import net.minecraft.commands.arguments.NbtTagArgument;
+import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
@@ -44,11 +49,47 @@ public class RawEventBus {
             }
         }
     }
-
     @SubscribeEvent
     public static void registerCommands(RegisterCommandsEvent event) {
         event.getDispatcher().register(Commands.literal("cogwheel").requires(s -> s.hasPermission(1))
+                .then(Commands.literal("schedule")
+                        .then(Commands.argument("delayInTicks", IntegerArgumentType.integer(0))
+                                        .then(Commands.argument("command", StringArgumentType.string())
+                                                .executes(context -> {
+                                                    String command = StringArgumentType.getString(context, "command");
+                                                    ServerLevel level = context.getSource().getLevel();
+                                                    Cogwheel.queueServerWork(IntegerArgumentType.getInteger(context, "delayInTicks"), () -> {
+                                                        Utils.runCommand(level, command);
+                                                    });
+                                                    return 0;
+                                                })
+                                        )
+                        )
+                )
                 .then(Commands.literal("npc")
+                        .then(Commands.literal("queue")
+                                .then(Commands.literal("add")
+                                        .then(Commands.argument("uuid", EntityArgument.entity())
+                                                .then(Commands.argument("action", NbtTagArgument.nbtTag())
+                                                        .executes(context -> {
+                                                            Entity entity = EntityArgument.getEntity(context, "uuid");
+                                                            Tag tag = NbtTagArgument.getNbtTag(context, "action");
+                                                            try {
+                                                                if (entity instanceof NPC npc) {
+                                                                    npc.queue.add(NPCAction.convert(tag));
+                                                                } else {
+                                                                    return 1;
+                                                                }
+                                                            } catch (NPCActionConversionFailedException e) {
+                                                                return 1;
+                                                            }
+
+                                                            return 0;
+                                                        })
+                                                )
+                                        )
+                                )
+                        )
                         .then(Commands.literal("set")
                                 .then(Commands.literal("skin")
                                         .then(Commands.argument("_skin", StringArgumentType.string())

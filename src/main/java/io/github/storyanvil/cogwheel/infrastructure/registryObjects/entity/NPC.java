@@ -1,24 +1,21 @@
 package io.github.storyanvil.cogwheel.infrastructure.registryObjects.entity;
 
-import io.github.storyanvil.cogwheel.infrastructure.registryObjects.ITEMS;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.syncher.EntityDataAccessor;
-import net.minecraft.network.syncher.EntityDataSerializers;
-import net.minecraft.network.syncher.SynchedEntityData;
+import io.github.storyanvil.cogwheel.infrastructure.StoryWorks.NPCAction;
+import io.github.storyanvil.cogwheel.infrastructure.StoryWorks.Utils;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.DifficultyInstance;
-import net.minecraft.world.entity.*;
+import net.minecraft.world.entity.AgeableMob;
+import net.minecraft.world.entity.AnimationState;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
-import net.minecraft.world.entity.ai.goal.FloatGoal;
-import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
-import net.minecraft.world.entity.ai.goal.TemptGoal;
 import net.minecraft.world.entity.animal.Animal;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.ServerLevelAccessor;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 public class NPC extends Animal {
 
@@ -28,7 +25,10 @@ public class NPC extends Animal {
 
     public final AnimationState idle =  new AnimationState();
     private int idleAnimTimeout = 0;
-    private static final EntityDataAccessor<String> DATA_skin = SynchedEntityData.defineId(NPC.class, EntityDataSerializers.STRING);
+    private int waitBeforeNextAction = 0;
+    private boolean allowNextAction = true;
+    public List<NPCAction> queue = Collections.synchronizedList(new ArrayList<NPCAction>());
+    private NPCAction current;
 
     @Override
     public void tick() {
@@ -37,7 +37,21 @@ public class NPC extends Animal {
         if (this.level().isClientSide) {
             setupState();
         }
+        if (waitBeforeNextAction > 0) {
+            waitBeforeNextAction--;
+        } else {
+            if (!allowNextAction) {
+                if (current != null && current.amIFreeToGo(this)) {
+                    allowNextAction = true;
+                }
+            } else if (queue.size() > 0) {
+                current = queue.remove(0);
+                current.execute(this);
+                addWaitTime(current.postDelay);
+            }
+        }
     }
+
 
     @Override
     protected void updateWalkAnimation(float pPartialTick) {
@@ -68,8 +82,7 @@ public class NPC extends Animal {
 
     @Override
     protected void registerGoals() {
-        this.goalSelector.addGoal(1, new TemptGoal(this, 2D, Ingredient.of(ITEMS.NPC_FOLLOW.get()), false));
-        this.goalSelector.addGoal(0, new LookAtPlayerGoal(this, Player.class, 5f));
+        //this.goalSelector.addGoal(0, new LookAtPlayerGoal(this, Player.class, 5f));
     }
 
     @Nullable
@@ -78,16 +91,18 @@ public class NPC extends Animal {
         return null;
     }
 
-    @Override
-    protected void defineSynchedData() {
-        super.defineSynchedData();
-        entityData.define(DATA_skin, "test");
-    }
-
     public String getSkin() {
-        return getPersistentData().getString("skin");
+        //return Utils.getEntityData(this, "skin");
+        return "test";
     }
     public void setSkin(String skin) {
-        getPersistentData().putString("skin", skin);
+        Utils.setEntityData(this, "skin", skin);
+    }
+    public void addWaitTime(int ticks) {
+        waitBeforeNextAction += ticks;
+    }
+
+    public void setAllowNextAction(boolean allowNextAction) {
+        this.allowNextAction = allowNextAction;
     }
 }
